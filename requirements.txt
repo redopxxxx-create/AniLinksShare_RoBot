@@ -8,3 +8,4 @@ motor
 aiohttp
 asyncio
 aiofiles
+python-3.11.9
