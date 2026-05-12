@@ -22,7 +22,7 @@ class Bot(Client):
             api_id=25436585,
             plugins={"root": "plugins"},
             workers=4,
-            bot_token="7585379584:AAH9B9q6uwChcGZKP3B2XyswqHjvlCg7fUI",
+            bot_token="8273539047:AAFGuPkAlW9XLXGrwRPyKd_oPQ9s-I5rKoA",
         )
         self.LOGGER = LOGGER
 
