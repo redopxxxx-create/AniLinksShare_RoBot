@@ -18,11 +18,11 @@ class Bot(Client):
     def __init__(self):
         super().__init__(
             name="AniLinkProvider_Robot",
-            api_hash="294890dbd5c747557ee3205daaefc922",
-            api_id=25436585,
+            api_hash=API_HASH,
+            api_id=APP_ID,
             plugins={"root": "plugins"},
-            workers=4,
-            bot_token="8273539047:AAFGuPkAlW9XLXGrwRPyKd_oPQ9s-I5rKoA",
+            workers=TG_BOT_WORKERS,
+            bot_token=TG_BOT_TOKEN,
         )
         self.LOGGER = LOGGER
 
@@ -34,7 +34,7 @@ class Bot(Client):
         # Notify owner of bot restart
         try:
             await self.send_message(
-                chat_id=7977515080,
+                chat_id=OWNER_ID,
                 text="<b><blockquote>🤖 Bot Restarted ♻️</blockquote></b>",
                 parse_mode=ParseMode.HTML
             )

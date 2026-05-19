@@ -50,6 +50,7 @@ _**ᴀᴠᴀɪʟᴀʙʟᴇ ᴏɴ ᴛᴇʟᴇɢʀᴀᴍ ᴀs [ʟɪɴᴋs sʜᴀʀ
 - [x] ADMINS - for 2 or more '12345678 89674523' add space between ids
 - [x] OWNER_ID - Your Telegram id
 - [x] DB_URI - MongoDB URL from [MongoDB Atlas](https://cloud.mongodb.com).
+- [x] MONGO_URI / MONGODB_URI - optional fallback names if you prefer these variable names.
 - [x] DB_NAME - Your MongoDB database name. **Optional**.
 - [x] DATABASE_CHANNEL - add a private channel id (for /genlink cmnd)
 ```

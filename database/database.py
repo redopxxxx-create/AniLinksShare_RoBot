@@ -1,19 +1,38 @@
 
-import motor.motor_asyncio
 import base64
-from config import DB_URI, DB_NAME
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-dbclient = motor.motor_asyncio.AsyncIOMotorClient(DB_URI)
-database = dbclient[DB_NAME]
+import motor.motor_asyncio
+from pymongo.errors import ConfigurationError
 
-# collections
-user_data = database['users']
-channels_collection = database['channels']
-fsub_channels_collection = database['fsub_channels']
+from config import DB_URI, DB_NAME, LOGGER
 
+log = LOGGER(__name__)
+
+try:
+    dbclient = motor.motor_asyncio.AsyncIOMotorClient(DB_URI)
+    database = dbclient[DB_NAME]
+    # collections
+    user_data = database['users']
+    channels_collection = database['channels']
+    fsub_channels_collection = database['fsub_channels']
+except ConfigurationError as e:
+    log.error(f"Invalid MongoDB URI provided. Database features disabled. Error: {e}")
+    dbclient = None
+    database = None
+    user_data = None
+    channels_collection = None
+    fsub_channels_collection = None
+
+
+
+def _db_unavailable() -> bool:
+    return database is None
 async def add_user(user_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Add a user to the database if they don't exist."""
     if not isinstance(user_id, int) or user_id <= 0:
         print(f"Invalid user_id: {user_id}")
@@ -31,12 +50,18 @@ async def add_user(user_id: int) -> bool:
         return False
 
 async def present_user(user_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Check if a user exists in the database."""
     if not isinstance(user_id, int):
         return False
     return bool(await user_data.find_one({'_id': user_id}))
 
 async def full_userbase() -> List[int]:
+
+    if _db_unavailable():
+        return []
     """Get all user IDs from the database."""
     try:
         user_docs = user_data.find()
@@ -46,6 +71,9 @@ async def full_userbase() -> List[int]:
         return []
 
 async def del_user(user_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Delete a user from the database."""
     try:
         result = await user_data.delete_one({'_id': user_id})
@@ -55,6 +83,9 @@ async def del_user(user_id: int) -> bool:
         return False
 
 async def is_admin(user_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Check if a user is an admin."""
     admins_collection = database['admins']
     try:
@@ -65,6 +96,9 @@ async def is_admin(user_id: int) -> bool:
         return False
 
 async def add_admin(user_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Add a user as admin."""
     admins_collection = database['admins']
     try:
@@ -76,6 +110,9 @@ async def add_admin(user_id: int) -> bool:
         return False
 
 async def remove_admin(user_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Remove a user from admins."""
     admins_collection = database['admins']
     try:
@@ -86,6 +123,9 @@ async def remove_admin(user_id: int) -> bool:
         return False
 
 async def list_admins() -> list:
+
+    if _db_unavailable():
+        return []
     """List all admin user IDs."""
     admins_collection = database['admins']
     try:
@@ -96,6 +136,9 @@ async def list_admins() -> list:
         return []
 
 async def save_channel(channel_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Save a channel to the database with invite link expiration."""
     if not isinstance(channel_id, int):
         print(f"Invalid channel_id: {channel_id}")
@@ -120,6 +163,9 @@ async def save_channel(channel_id: int) -> bool:
         return False
 
 async def get_channels() -> List[int]:
+
+    if _db_unavailable():
+        return []
     """Get all active channel IDs from the database."""
     try:
         channels = await channels_collection.find({"status": "active"}).to_list(None)
@@ -137,6 +183,9 @@ async def get_channels() -> List[int]:
         return []
 
 async def delete_channel(channel_id: int) -> bool:
+
+    if _db_unavailable():
+        return False
     """Delete a channel from the database."""
     try:
         result = await channels_collection.delete_one({"channel_id": channel_id})
@@ -146,6 +195,9 @@ async def delete_channel(channel_id: int) -> bool:
         return False
 
 async def save_encoded_link(channel_id: int) -> Optional[str]:
+
+    if _db_unavailable():
+        return None
     """Save an encoded link for a channel and return it."""
     if not isinstance(channel_id, int):
         print(f"Invalid channel_id: {channel_id}")
@@ -170,6 +222,9 @@ async def save_encoded_link(channel_id: int) -> Optional[str]:
         return None
 
 async def get_channel_by_encoded_link(encoded_link: str) -> Optional[int]:
+
+    if _db_unavailable():
+        return None
     """Get a channel ID by its encoded link."""
     if not isinstance(encoded_link, str):
         return None
@@ -182,6 +237,9 @@ async def get_channel_by_encoded_link(encoded_link: str) -> Optional[int]:
         return None
 
 async def save_encoded_link2(channel_id: int, encoded_link: str) -> Optional[str]:
+
+    if _db_unavailable():
+        return None
     """Save a secondary encoded link for a channel."""
     if not isinstance(channel_id, int) or not isinstance(encoded_link, str):
         print(f"Invalid input: channel_id={channel_id}, encoded_link={encoded_link}")
@@ -205,6 +263,9 @@ async def save_encoded_link2(channel_id: int, encoded_link: str) -> Optional[str
         return None
 
 async def get_channel_by_encoded_link2(encoded_link: str) -> Optional[int]:
+
+    if _db_unavailable():
+        return None
     """Get a channel ID by its secondary encoded link."""
     if not isinstance(encoded_link, str):
         return None
@@ -217,6 +278,9 @@ async def get_channel_by_encoded_link2(encoded_link: str) -> Optional[int]:
         return None
 
 async def save_invite_link(channel_id: int, invite_link: str, is_request: bool) -> bool:
+
+    if _db_unavailable():
+        return False
     """Save the current invite link for a channel and its type."""
     if not isinstance(channel_id, int) or not isinstance(invite_link, str):
         print(f"Invalid input: channel_id={channel_id}, invite_link={invite_link}")
@@ -241,6 +305,9 @@ async def save_invite_link(channel_id: int, invite_link: str, is_request: bool) 
         return False
 
 async def get_current_invite_link(channel_id: int) -> Optional[dict]:
+
+    if _db_unavailable():
+        return None
     """Get the current invite link and its type for a channel."""
     if not isinstance(channel_id, int):
         return None
